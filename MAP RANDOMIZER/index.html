@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EngineerX 4.0 — Map Randomizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0a0a0b;
+    --panel:#151517;
+    --panel-2:#1d1d20;
+    --yellow:#ffc300;
+    --yellow-deep:#c98f00;
+    --fire:#ff4e1f;
+    --ivory:#f3f1e7;
+    --muted:#9a9a9f;
+    --line:#2a2a2d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(255,78,31,.10), transparent 34rem),
+      radial-gradient(ellipse at 88% 10%, rgba(255,195,0,.08), transparent 27rem),
+      var(--black);
+    color:var(--ivory);
+    font-family:'Rajdhani',sans-serif;
+    font-weight:500;
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{
+    font-family:'Anton',sans-serif;
+    font-weight:400;
+    letter-spacing:0.5px;
+    line-height:0.95;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1480px;margin:0 auto;padding:0 28px;}
+
+  /* subtle scanline overlay for HUD feel */
+  .scanline{
+    position:fixed; inset:0; pointer-events:none; z-index:1;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay;
+  }
+  .arena-3d{
+    position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;
+    perspective:900px;background:linear-gradient(180deg,#08090b 0%,#0b0b0d 46%,#050506 100%);
+  }
+  .arena-3d::before{
+    content:"";position:absolute;width:180%;height:105%;left:-40%;bottom:-45%;
+    background-image:
+      linear-gradient(rgba(255,195,0,.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,195,0,.15) 1px, transparent 1px);
+    background-size:56px 56px;
+    border-top:1px solid rgba(255,195,0,.34);
+    transform:rotateX(65deg) rotateZ(var(--arena-tilt, 0deg)) translate(var(--arena-x, 0px), var(--arena-y, 0px));
+    transform-origin:center top;
+    opacity:.42;animation:floor-drift 12s linear infinite;
+  }
+  .arena-3d::after{
+    content:"";position:absolute;inset:8% 8%;border:1px solid rgba(255,255,255,.055);
+    clip-path:polygon(0 0, 18% 0, 22px 22px, 78% 22px, 82% 0, 100% 0, 100% 22%, calc(100% - 22px) 26%, calc(100% - 22px) 74%, 100% 78%, 100% 100%, 82% 100%, calc(82% - 22px) calc(100% - 22px), 22% calc(100% - 22px), 18% 100%, 0 100%, 0 78%, 22px 74%, 22px 26%, 0 22%);
+    transform:translate(var(--arena-x, 0px), var(--arena-y, 0px));transition:transform .25s ease;
+  }
+  .target-reticle{position:fixed;right:7vw;top:16vh;width:180px;height:180px;z-index:0;pointer-events:none;opacity:.36;transform:rotate(0deg);animation:reticle-spin 18s linear infinite;}
+  .target-reticle::before,.target-reticle::after{content:"";position:absolute;inset:0;border:1px solid rgba(255,78,31,.45);clip-path:polygon(45% 0,55% 0,55% 42%,100% 42%,100% 58%,55% 58%,55% 100%,45% 100%,45% 58%,0 58%,0 42%,45% 42%);}
+  .target-reticle::after{inset:28px;border-color:rgba(255,195,0,.55);transform:rotate(45deg);}
+  @keyframes floor-drift{from{background-position:0 0,0 0}to{background-position:0 56px,56px 0}}
+  @keyframes reticle-spin{to{transform:rotate(360deg)}}
+
+  /* ---------- top strip ---------- */
+  .topstrip{
+    border-bottom:1px solid var(--line);
+    padding:20px 0;
+    min-height:154px;
+    position:relative; z-index:2;background:rgba(10,10,11,.74);backdrop-filter:blur(10px);
+  }
+  .topstrip .wrap{
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:30px;
+    position:relative;min-height:114px;
+  }
+  .brandrow{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:52px;height:52px;display:grid;place-items:center;flex:none;
+    font-family:'Anton',sans-serif;font-size:26px;line-height:1;color:var(--black);
+    background:var(--yellow);clip-path:polygon(18% 0,100% 0,82% 100%,0 100%);
+    box-shadow:6px 6px 0 var(--fire);
+  }
+  .brand-copy{display:flex;flex-direction:column;gap:2px;line-height:1;}
+  .brand-logo{font-family:'Anton',sans-serif;font-size:clamp(28px,4vw,40px);letter-spacing:1px;color:var(--ivory);text-transform:uppercase;}
+  .brand-logo b{color:var(--yellow);font-weight:400;}
+  .brand-sub{font-size:11px;color:var(--muted);letter-spacing:.17em;text-transform:uppercase;font-weight:700;}
+  .creator-badge{height:128px;padding-left:6px;margin-left:-10px;border-left:1px solid var(--line);display:flex;align-items:center;position:relative;isolation:isolate;perspective:500px;}
+  .creator-badge img{width:176px;height:118px;object-fit:contain;display:block;filter:drop-shadow(0 0 12px rgba(16,169,226,.32));animation:tech-impact 4.8s cubic-bezier(.2,.75,.25,1) infinite;}
+  .creator-badge::after,.game-badge::after{content:"";position:absolute;left:-6%;right:-6%;height:2px;top:50%;z-index:-1;opacity:0;background:currentColor;box-shadow:0 0 16px currentColor;animation:energy-sweep 4.8s ease-out infinite;}
+  .creator-badge::after{color:#10a9e2;animation-delay:1.35s;}
+  .header-intro{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;}
+  .header-intro h1{font-size:clamp(30px,3.2vw,48px);text-transform:uppercase;color:var(--ivory);}
+  .header-intro p{color:var(--muted);font-size:14px;font-weight:600;margin-top:5px;}
+  .header-intro p strong{color:var(--yellow);}
+  .game-badge{position:absolute;top:50%;right:clamp(190px,18vw,360px);transform:translateY(-50%);height:118px;width:204px;display:flex;align-items:center;justify-content:center;isolation:isolate;perspective:500px;}
+  .game-badge img{width:204px;max-height:96px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,195,0,.22));animation:fire-impact 4.8s cubic-bezier(.2,.75,.25,1) .7s infinite;}
+  .game-badge::after{color:var(--yellow);animation-delay:.7s;}
+  @keyframes fire-impact{
+    0%,62%,100%{transform:translateY(0) rotateX(0) rotateY(0) scale(1);filter:drop-shadow(0 0 9px rgba(255,195,0,.22));}
+    10%{transform:translateY(3px) rotateX(-8deg) rotateY(14deg) scale(.91);filter:drop-shadow(0 0 3px rgba(255,195,0,.1));}
+    19%{transform:translateY(-8px) rotateX(8deg) rotateY(-14deg) scale(1.12);filter:drop-shadow(0 0 24px rgba(255,195,0,.9));}
+    29%{transform:translateY(-2px) rotateX(-3deg) rotateY(4deg) scale(.98);filter:drop-shadow(0 0 15px rgba(255,78,31,.66));}
+    38%{transform:translateY(0) rotateX(0) rotateY(0) scale(1.03);filter:drop-shadow(0 0 12px rgba(255,195,0,.55));}
+  }
+  @keyframes tech-impact{
+    0%,62%,100%{transform:translateY(0) rotateX(0) rotateY(0) scale(1);filter:drop-shadow(0 0 12px rgba(16,169,226,.32));}
+    10%{transform:translateY(3px) rotateX(-8deg) rotateY(-14deg) scale(.91);filter:drop-shadow(0 0 3px rgba(16,169,226,.1));}
+    19%{transform:translateY(-8px) rotateX(8deg) rotateY(14deg) scale(1.12);filter:drop-shadow(0 0 24px rgba(16,169,226,.92));}
+    29%{transform:translateY(-2px) rotateX(-3deg) rotateY(-4deg) scale(.98);filter:drop-shadow(0 0 15px rgba(57,190,240,.72));}
+    38%{transform:translateY(0) rotateX(0) rotateY(0) scale(1.03);filter:drop-shadow(0 0 12px rgba(16,169,226,.55));}
+  }
+  @keyframes energy-sweep{
+    0%,10%,100%{opacity:0;transform:scaleX(.2);}
+    18%{opacity:1;transform:scaleX(1.15);}
+    32%{opacity:0;transform:scaleX(1.5);}
+  }
+  .tag-live{
+    font-size:12px;color:var(--fire);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+    display:flex;align-items:center;gap:6px;grid-column:3;justify-self:end;
+  }
+  .tag-live::before{
+    content:"";width:7px;height:7px;background:var(--fire);border-radius:50%;
+    box-shadow:0 0 8px var(--fire);
+  }
+
+  /* ---------- section heading ---------- */
+  .section{padding:16px 0;position:relative;z-index:2;min-height:calc(100svh - 280px);display:flex;align-items:center;}
+  .section > .wrap{width:100%;}
+  .section::before{
+    content:"";position:absolute;inset:22px 0 auto;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,195,0,.45), transparent);
+  }
+  .section-head{margin-bottom:14px;}
+  .section-head h2{font-size:clamp(32px,5vw,54px);text-transform:uppercase;color:var(--ivory);}
+  .section-head p{color:var(--muted);font-size:16px;max-width:520px;font-weight:600;margin-top:10px;}
+  .section-head strong{color:var(--yellow);}
+  .pool-meta{display:flex;gap:0;margin:9px auto 0;border:1px solid var(--line);width:max-content;max-width:100%;background:rgba(21,21,23,.76);}
+  .pool-meta span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-right:1px solid var(--line);white-space:nowrap;}
+  .pool-meta span:last-child{border-right:0;color:var(--yellow);}
+
+  /* ---------- layout: grid + control panel ---------- */
+  .randomizer-layout{
+    display:grid;
+    grid-template-areas:"controls" "maps";
+    gap:14px;
+    align-items:start;
+    position:relative;
+  }
+  .maps-grid{
+    display:grid;
+    grid-area:maps;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:14px;
+  }
+  .map-card{
+    background:linear-gradient(145deg,rgba(36,36,39,.96),rgba(20,20,22,.96));
+    border:1px solid var(--line);
+    padding:14px 14px 18px;
+    text-align:center;
+    position:relative;
+    cursor:pointer;
+    overflow:hidden;
+    transition:border-color .18s ease, background .18s ease, transform .18s ease, opacity .2s ease, box-shadow .18s ease;
+  }
+  .map-card::after{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:linear-gradient(120deg, transparent 35%, rgba(255,255,255,.18) 50%, transparent 65%);
+    transform:translateX(-120%);
+  }
+  .map-card:not(.used):hover{border-color:#a27e19;transform:translateY(-7px) rotateX(2deg);box-shadow:0 22px 30px -22px #000,0 0 25px -20px rgba(255,195,0,.8);}
+  .map-card:not(.used):hover .thumb img{transform:scale(1.08);}
+  .map-card .thumb{
+    width:100%;
+    aspect-ratio:1;
+    background:
+      linear-gradient(135deg, rgba(255,195,0,0.12), rgba(255,195,0,0.02)),
+      repeating-linear-gradient(45deg, #232326 0 10px, #1d1d20 10px 20px);
+    border:1px solid var(--line);
+    margin-bottom:14px;
+    overflow:hidden;
+    position:relative;
+  }
+  .map-card .thumb img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .45s cubic-bezier(.2,.7,.2,1), filter .3s ease;
+  }
+  .map-card .thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 52%, rgba(4,4,5,.58));pointer-events:none;}
+  .map-card .num{
+    font-family:'Anton',sans-serif;
+    font-size:13px;color:var(--muted);
+  }
+  .map-card h3{
+    font-size:18px;color:var(--ivory);margin-top:8px;text-transform:uppercase;
+  }
+  .map-card .status{
+    margin-top:10px;font-size:11px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;
+    min-height:14px;
+  }
+  .map-card.scanning{border-color:var(--yellow);background:#26210e;box-shadow:0 0 0 1px rgba(255,195,0,.22), 0 0 26px -8px rgba(255,195,0,.45);}
+  .map-card.scanning::after{opacity:1;animation:scan-sweep .5s linear infinite;}
+  .map-card.scanning .thumb img{filter:brightness(1.3) saturate(1.25);transform:scale(1.06);}
+  .map-card.scanning .status{color:var(--yellow);}
+  .map-card.selected{
+    border-color:var(--yellow);
+    background:linear-gradient(160deg, rgba(255,195,0,0.16), rgba(255,195,0,0.03));
+    transform:translateY(-4px);
+  }
+  .map-card.selected .thumb img{transform:scale(1.09);filter:saturate(1.22) contrast(1.06);}
+  .map-card.selected .status{color:var(--fire);font-weight:700;}
+  .map-card.selected::before{
+    content:"";position:absolute;inset:0;
+    box-shadow:0 0 0 1px var(--yellow), 0 18px 30px -14px rgba(255,195,0,0.5);
+    pointer-events:none;
+  }
+  .map-card.used:not(.selected){
+    opacity:0.35;
+    cursor:default;
+  }
+  @keyframes scan-sweep{to{transform:translateX(120%);}}
+  @keyframes lock-in{0%{transform:scale(.78);opacity:0}65%{transform:scale(1.04);opacity:1}100%{transform:scale(1);opacity:1}}
+  .map-card.used:not(.selected) .status{color:var(--muted);}
+
+  /* ---------- control panel ---------- */
+  .control-panel{
+    grid-area:controls;
+    background:linear-gradient(145deg,rgba(28,28,31,.96),rgba(14,14,16,.96));
+    border:1px solid var(--line);
+    padding:16px 18px;
+    position:relative;
+    box-shadow:18px 20px 40px -34px #000;
+    display:grid;
+    grid-template-columns:auto minmax(190px,1fr) minmax(180px,260px) minmax(150px,220px);
+    align-items:center;
+    gap:14px;
+  }
+  .control-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--fire),var(--yellow),transparent);}
+  .panel-header{
+    font-size:14px;letter-spacing:0.12em;color:var(--ivory);
+    text-transform:uppercase;font-weight:700;
+    padding-right:14px;
+    border-right:1px solid var(--line);
+  }
+  .selected-display{margin:0;}
+  .selected-display .label{
+    display:block;font-size:13px;letter-spacing:0.12em;color:#c3c3c7;font-weight:700;
+    text-transform:uppercase;margin-bottom:8px;
+  }
+  .selected-pill{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    padding:14px 16px;
+    font-family:'Anton',sans-serif;
+    font-size:clamp(22px,2vw,28px);
+    color:var(--yellow);
+    text-transform:uppercase;
+    clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+    min-height:53px;display:flex;align-items:center;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .selected-pill.active{background:#2c250f;transform:scale(1.025);}
+  .btn{
+    display:block;
+    width:100%;
+    background:var(--yellow);
+    color:var(--black);
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:0.04em;
+    padding:15px 20px;
+    clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);
+    border:none;
+    cursor:pointer;
+    transition:transform .15s ease, background .15s ease, box-shadow .15s ease;
+    text-align:center;
+  }
+  .btn:hover{background:#ffd23f;transform:translateY(-2px);box-shadow:0 10px 20px -13px rgba(255,195,0,.9);}
+  .btn:disabled{opacity:0.55;cursor:default;transform:none;}
+  .btn.is-spinning{animation:button-pulse .7s ease-in-out infinite alternate;}
+  @keyframes button-pulse{to{box-shadow:0 0 22px -5px rgba(255,195,0,.65);filter:brightness(1.08)}}
+  .btn:disabled:hover{background:var(--yellow);}
+  .btn.ghost{
+    background:transparent;color:var(--ivory);
+    border:1px solid var(--line);
+    margin:0;
+  }
+  .btn.ghost:hover{border-color:var(--fire);color:var(--fire);background:transparent;transform:translateY(-2px);}
+  .hint{
+    grid-column:1/-1;
+    margin:0;font-size:15px;color:#bdbdc2;font-weight:600;line-height:1.35;
+  }
+  .hint strong{color:var(--ivory);}
+
+  @media (max-width:1100px){
+    .section{min-height:auto;}
+    .topstrip{min-height:0;}
+    .maps-grid{grid-template-columns:repeat(3,1fr);}
+    .control-panel{grid-template-columns:1fr 1fr;}
+    .panel-header{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px;}
+    .selected-display{grid-column:1/-1;display:grid;grid-template-columns:170px 1fr;align-items:center;gap:12px;}
+    .selected-display .label{margin:0;}
+    .hint{grid-column:1/-1;}
+    .topstrip .wrap{grid-template-columns:auto 1fr;gap:18px;min-height:0;}
+    .header-intro{position:static;transform:none;text-align:left;white-space:normal;}
+    .header-intro .pool-meta{margin-left:0;}
+    .game-badge{display:none;}
+    .tag-live{grid-column:2;}
+  }
+  @media (max-width:640px){
+    .topstrip .wrap{display:flex;align-items:flex-start;gap:12px;}
+    .brand-mark{width:42px;height:42px;font-size:22px;box-shadow:4px 4px 0 var(--fire);}
+    .brand-logo{font-size:28px;}
+    .brand-sub{font-size:9px;letter-spacing:.12em;}
+    .creator-badge{height:52px;padding-left:8px;}
+    .creator-badge img{width:70px;height:50px;}
+    .tag-live{font-size:10px;margin-left:56px;}
+    .header-intro{order:3;border-top:1px solid var(--line);padding:12px 0 0;width:100%;}
+    .header-intro h1{font-size:30px;}
+    .header-intro p{font-size:12px;}
+    .header-intro .pool-meta{margin-top:8px;}
+    .section{padding:24px 0 32px;display:block;}
+    .maps-grid{grid-template-columns:repeat(2,1fr);}
+    .control-panel{grid-template-columns:1fr 1fr;padding:16px;gap:12px;}
+    .panel-header{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px;}
+    .selected-display{grid-column:1/-1;}
+    .selected-display{display:block;}
+    .hint{line-height:1.4;}
+    .pool-meta{width:100%;overflow:auto;}
+    .target-reticle{right:-45px;top:12vh;transform:scale(.7);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important;}
+  }
+
+  /* ---------- modal ---------- */
+  .map-modal{
+    position:fixed;inset:0;z-index:50;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .map-modal.hidden{display:none;}
+  .map-modal-backdrop{
+    position:absolute;inset:0;
+    background:rgba(2,2,3,0.42);
+    backdrop-filter:blur(2px);
+  }
+  .map-modal-content{
+    position:relative;
+    background:#050506;
+    border:0;
+    width:100%;height:100%;
+    padding:0;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,195,0,.35);
+    animation:lock-in .4s cubic-bezier(.16,.8,.25,1) both;
+  }
+  .map-modal-content .modal-thumb{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    background:#111;
+    overflow:hidden;margin:0;
+  }
+  .map-modal-content .modal-thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 20%,transparent 52%,rgba(0,0,0,.86) 100%);pointer-events:none;}
+  .map-modal-content .modal-thumb img{width:100%;height:100%;object-fit:cover;display:block;animation:map-reveal .8s cubic-bezier(.16,.8,.25,1) both;}
+  @keyframes map-reveal{from{transform:scale(1.25);filter:brightness(1.55) saturate(1.5)}to{transform:scale(1);filter:brightness(1) saturate(1)}}
+  .map-modal-content h2{
+    position:absolute;left:clamp(24px,7vw,110px);bottom:clamp(42px,8vh,90px);
+    font-size:clamp(56px,12vw,168px);color:var(--yellow);text-transform:uppercase;
+    text-shadow:0 7px 24px rgba(0,0,0,.8);z-index:1;
+  }
+  .map-modal-content .modal-tag{
+    position:absolute;left:clamp(26px,7vw,112px);bottom:clamp(26px,5vh,54px);z-index:1;
+    color:var(--ivory);font-size:clamp(12px,1.5vw,16px);font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;display:block;
+  }
+  .modal-close-btn{
+    position:absolute; top:clamp(18px,3vw,38px); right:clamp(18px,3vw,38px);z-index:2;
+    width:46px;height:46px;
+    background:rgba(10,10,11,.75);border:1px solid rgba(255,255,255,.28);
+    color:var(--ivory);font-size:25px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close-btn:hover{border-color:var(--yellow);color:var(--yellow);}
+
+  /* ---------- footer ---------- */
+  footer{padding:10px 0;border-top:1px solid var(--line);position:relative;z-index:2;background:rgba(8,8,9,.7);}
+  footer .wrap{display:flex;justify-content:center;}
+  .footer-brand{display:flex;align-items:center;gap:10px;}
+  .footer-logo{width:38px;height:38px;object-fit:cover;object-position:center;border:1px solid rgba(255,120,31,.55);box-shadow:0 0 16px -7px var(--fire);}
+  footer .foot-title{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:700;}
+  footer .foot-title strong{color:var(--yellow);font-family:'Anton',sans-serif;font-size:16px;font-weight:400;letter-spacing:.6px;}
+</style>
+</head>
+<body>
+
+<div class="arena-3d"></div>
+<div class="target-reticle"></div>
+<div class="scanline"></div>
+
+  <div class="topstrip">
+    <div class="wrap">
+      <div class="brandrow">
+        <div class="brand-mark" aria-hidden="true">EX</div>
+        <div class="brand-copy">
+          <div class="brand-logo">Engineer<b>X</b> <b>4.0</b></div>
+          <div class="brand-sub">Free Fire Tournament Series</div>
+        </div>
+        <div class="creator-badge">
+          <img src="assets/tech-geeks-logo.png" alt="Tech Geeks">
+        </div>
+      </div>
+      <div class="header-intro">
+        <h1>Map Randomizer</h1>
+        <p>Five maps in the pool. Each map appears <strong>only once</strong> until you reset.</p>
+        <div class="pool-meta" aria-label="Tournament map pool details">
+          <span>Map Pool: 05</span>
+          <span>Mode: Battle Royale</span>
+          <span>Live Draw</span>
+        </div>
+      </div>
+      <div class="game-badge">
+        <img src="assets/free-fire-logo.png" alt="Free Fire">
+      </div>
+      <div class="tag-live">Drop Zone Selector</div>
+    </div>
+  </div>
+
+  <section class="section" id="dropzone">
+    <div class="wrap">
+      <div class="randomizer-layout">
+        <div class="maps-grid" id="mapsGrid">
+          <!-- map cards injected by JS -->
+        </div>
+
+        <div class="control-panel">
+          <div class="panel-header">Randomizer Control</div>
+
+          <div class="selected-display">
+            <span class="label">Selected Map</span>
+            <div id="selectedMap" class="selected-pill">Press Randomize</div>
+          </div>
+
+          <button class="btn" id="randomizeBtn">Randomize Map</button>
+          <button class="btn ghost" id="resetBtn">Reset All Maps</button>
+
+          <p class="hint" id="statusText">All five maps are ready. Click <strong>Randomize Map</strong> to lock in a drop zone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="mapModal" class="map-modal hidden">
+    <div class="map-modal-backdrop"></div>
+    <div class="map-modal-content">
+      <button id="modalClose" class="modal-close-btn" aria-label="Close selected map">&times;</button>
+      <div class="modal-thumb" id="modalThumb"></div>
+      <span class="modal-tag">Drop Zone Locked</span>
+      <h2 id="modalTitle"></h2>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-brand">
+        <img class="footer-logo" src="assets/hld-esports-logo.png" alt="HLD Esports logo">
+        <div class="foot-title">Designed by <strong>HLD Esports</strong></div>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  const maps = [
+    { name: "Bermuda",   img: "MAPS/BERMUDA.png" },
+    { name: "Purgatory", img: "MAPS/PURGATORY.png" },
+    { name: "Solara",    img: "MAPS/SOLARA.png" },
+    { name: "NeXTerra",  img: "MAPS/NEXTERRA.png" },
+    { name: "Kalahari",  img: "MAPS/KALAHARI.png" }
+  ].map(m => ({...m, used:false}));
+
+  const grid = document.getElementById('mapsGrid');
+  const selectedMapEl = document.getElementById('selectedMap');
+  const statusText = document.getElementById('statusText');
+  const randomizeBtn = document.getElementById('randomizeBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const modal = document.getElementById('mapModal');
+  const modalThumb = document.getElementById('modalThumb');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalClose = document.getElementById('modalClose');
+
+  let running = false;
+  let modalTimer;
+
+  document.addEventListener('pointermove', event => {
+    const x = (event.clientX / window.innerWidth - .5) * 12;
+    const y = (event.clientY / window.innerHeight - .5) * 8;
+    document.documentElement.style.setProperty('--arena-x', `${x}px`);
+    document.documentElement.style.setProperty('--arena-y', `${y}px`);
+    document.documentElement.style.setProperty('--arena-tilt', `${x * .08}deg`);
+  }, { passive:true });
+
+  // Lightweight arcade effects generated in-browser: no extra audio files needed.
+  let audioContext;
+  function playTone(frequency, duration, type = 'square', volume = 0.025){
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContextClass) return;
+    audioContext ||= new AudioContextClass();
+    if(audioContext.state === 'suspended') audioContext.resume();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    gain.gain.setValueAtTime(volume, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + duration);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + duration);
+  }
+  function playSelectionSound(){
+    playTone(220, .10, 'sawtooth', .07);
+    setTimeout(() => playTone(330, .12, 'sawtooth', .08), 90);
+    setTimeout(() => playTone(660, .35, 'square', .10), 185);
+  }
+  function playSpinTick(stepNumber){
+    const rise = Math.min(stepNumber * 7, 100);
+    playTone(155 + rise, .065, 'square', .045);
+  }
+
+  function renderCards(){
+    grid.innerHTML = maps.map((m,i)=>`
+      <div class="map-card ${m.used ? 'used' : ''}" data-index="${i}">
+        <div class="thumb">${m.img ? `<img src="${m.img}" alt="${m.name}">` : ''}</div>
+        <div class="num">0${i+1}</div>
+        <h3>${m.name}</h3>
+        <div class="status">${m.used ? 'Used' : ''}</div>
+      </div>
+    `).join('');
+
+    // clicking an already-selected/used map reopens its modal
+    grid.querySelectorAll('.map-card.used').forEach(card=>{
+      card.addEventListener('click', () => {
+        const i = Number(card.dataset.index);
+        openModal(maps[i]);
+      });
+    });
+  }
+  renderCards();
+
+  function openModal(map){
+    clearTimeout(modalTimer);
+    modalThumb.innerHTML = map.img ? `<img src="${map.img}" alt="${map.name}">` : '';
+    modalTitle.textContent = map.name;
+    modal.classList.remove('hidden');
+    modalTimer = setTimeout(closeModal, 5000);
+  }
+  function closeModal(){
+    clearTimeout(modalTimer);
+    modal.classList.add('hidden');
+  }
+  modalClose.addEventListener('click', closeModal);
+  modal.querySelector('.map-modal-backdrop').addEventListener('click', closeModal);
+
+  randomizeBtn.addEventListener('click', () => {
+    if(running) return;
+
+    const available = maps.filter(m => !m.used);
+    if(available.length === 0){
+      statusText.innerHTML = `All maps have been used. Click <strong>Reset All Maps</strong> to start a fresh pool.`;
+      return;
+    }
+
+    running = true;
+    randomizeBtn.disabled = true;
+    randomizeBtn.classList.add('is-spinning');
+    statusText.textContent = "Scanning drop zones...";
+
+    const cards = Array.from(document.querySelectorAll('.map-card'));
+    cards.forEach(c => { c.classList.remove('selected','scanning'); });
+
+    const availableIndexes = maps.map((m,i)=> m.used ? -1 : i).filter(i => i !== -1);
+    const finalIndex = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
+
+    let cycles = 0;
+    const totalCycles = 16 + availableIndexes.indexOf(finalIndex) * 2;
+    let delay = 70;
+    let current = -1;
+
+    function step(){
+      if(current >= 0){
+        cards[current].classList.remove('scanning');
+        if(!maps[current].used) cards[current].querySelector('.status').textContent = '';
+      }
+      current = availableIndexes[cycles % availableIndexes.length];
+      cards[current].classList.add('scanning');
+      cards[current].querySelector('.status').textContent = 'Scanning';
+      playSpinTick(cycles);
+
+      cycles++;
+      delay += 9; // ease out
+
+      if(cycles < totalCycles){
+        setTimeout(step, delay);
+      } else {
+        cards[current].classList.remove('scanning');
+        const chosen = cards[finalIndex];
+        chosen.classList.add('selected');
+        chosen.querySelector('.status').textContent = 'Selected';
+
+        maps[finalIndex].used = true;
+        selectedMapEl.textContent = maps[finalIndex].name;
+        selectedMapEl.classList.remove('active');
+        requestAnimationFrame(() => selectedMapEl.classList.add('active'));
+
+        const remaining = maps.filter(m => !m.used).length;
+        statusText.innerHTML = remaining > 0
+          ? `Drop zone locked: <strong>${maps[finalIndex].name}</strong>. ${remaining} map${remaining>1?'s':''} left in the pool.`
+          : `Drop zone locked: <strong>${maps[finalIndex].name}</strong>. All maps used — reset to play another round.`;
+
+        playSelectionSound();
+        setTimeout(() => openModal(maps[finalIndex]), 180);
+
+        running = false;
+        randomizeBtn.disabled = false;
+        randomizeBtn.classList.remove('is-spinning');
+        renderCards();
+      }
+    }
+    step();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    maps.forEach(m => m.used = false);
+    selectedMapEl.textContent = "Press Randomize";
+    selectedMapEl.classList.remove('active');
+    statusText.innerHTML = `All five maps are ready. Click <strong>Randomize Map</strong> to lock in a drop zone.`;
+    renderCards();
+  });
+</script>
+
+</body>
+</html>
