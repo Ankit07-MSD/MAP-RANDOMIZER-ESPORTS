@@ -3,20 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EngineerX 4.0 — Map Randomizer</title>
+<title>INNOVISTA TECHFEST 2026 — Map Randomizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root{
-    --black:#0a0a0b;
-    --panel:#151517;
-    --panel-2:#1d1d20;
-    --yellow:#ffc300;
-    --yellow-deep:#c98f00;
-    --fire:#ff4e1f;
-    --ivory:#f3f1e7;
-    --muted:#9a9a9f;
-    --line:#2a2a2d;
+    --black:#050b1d;
+    --panel:#0b1833;
+    --panel-2:#11264a;
+    --yellow:#30d9ff;
+    --yellow-deep:#758cff;
+    --fire:#ff7448;
+    --ivory:#effaff;
+    --muted:#91abc8;
+    --line:rgba(48,217,255,.24);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -133,6 +134,9 @@
     content:"";width:7px;height:7px;background:var(--fire);border-radius:50%;
     box-shadow:0 0 8px var(--fire);
   }
+  .partner-slot{grid-column:3;justify-self:end;height:104px;width:176px;display:flex;align-items:center;justify-content:center;position:relative;isolation:isolate;perspective:500px;}
+  .partner-slot img{width:176px;height:100px;object-fit:contain;display:block;filter:drop-shadow(0 0 12px rgba(16,169,226,.38));animation:tech-impact 4.8s cubic-bezier(.2,.75,.25,1) infinite;}
+  .partner-slot::after{content:"";position:absolute;left:-6%;right:-6%;height:2px;top:50%;z-index:-1;opacity:0;color:#10a9e2;background:currentColor;box-shadow:0 0 16px currentColor;animation:energy-sweep 4.8s ease-out 1.35s infinite;}
 
   /* ---------- section heading ---------- */
   .section{padding:16px 0;position:relative;z-index:2;min-height:calc(100svh - 280px);display:flex;align-items:center;}
@@ -315,6 +319,7 @@
     .header-intro .pool-meta{margin-left:0;}
     .game-badge{display:none;}
     .tag-live{grid-column:2;}
+    .partner-slot{grid-column:2;justify-self:end;}
   }
   @media (max-width:640px){
     .topstrip .wrap{display:flex;align-items:flex-start;gap:12px;}
@@ -324,6 +329,8 @@
     .creator-badge{height:52px;padding-left:8px;}
     .creator-badge img{width:70px;height:50px;}
     .tag-live{font-size:10px;margin-left:56px;}
+    .partner-slot{height:56px;width:92px;margin-left:auto;}
+    .partner-slot img{width:92px;height:54px;}
     .header-intro{order:3;border-top:1px solid var(--line);padding:12px 0 0;width:100%;}
     .header-intro h1{font-size:30px;}
     .header-intro p{font-size:12px;}
@@ -395,33 +402,106 @@
   /* ---------- footer ---------- */
   footer{padding:10px 0;border-top:1px solid var(--line);position:relative;z-index:2;background:rgba(8,8,9,.7);}
   footer .wrap{display:flex;justify-content:center;}
-  .footer-brand{display:flex;align-items:center;gap:10px;}
-  .footer-logo{width:38px;height:38px;object-fit:cover;object-position:center;border:1px solid rgba(255,120,31,.55);box-shadow:0 0 16px -7px var(--fire);}
-  footer .foot-title{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:700;}
-  footer .foot-title strong{color:var(--yellow);font-family:'Anton',sans-serif;font-size:16px;font-weight:400;letter-spacing:.6px;}
+  .footer-brand{display:flex;align-items:center;gap:10px;position:relative;isolation:isolate;perspective:420px;}
+  .footer-brand::before{content:"";position:absolute;left:-28px;right:-28px;top:50%;height:2px;z-index:-1;opacity:0;background:linear-gradient(90deg,transparent,var(--fire),var(--yellow),transparent);box-shadow:0 0 18px var(--fire);animation:hld-energy-line 5.2s ease-out infinite;}
+  .footer-logo{width:38px;height:38px;object-fit:cover;object-position:center;border:1px solid rgba(255,120,31,.55);box-shadow:0 0 16px -7px var(--fire);animation:hld-impact 5.2s cubic-bezier(.2,.78,.25,1) infinite;}
+  footer .foot-title{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:700;animation:hld-copy-hit 5.2s ease-out infinite;}
+  footer .foot-title strong{color:var(--yellow);font-family:'Anton',sans-serif;font-size:16px;font-weight:400;letter-spacing:.6px;display:inline-block;animation:hld-word-flash 5.2s ease-out infinite;}
+  @keyframes hld-impact{
+    0%,58%,100%{transform:translateY(0) rotateY(0) scale(1);filter:drop-shadow(0 0 0 rgba(255,78,31,0));}
+    11%{transform:translateY(3px) rotateY(-14deg) scale(.82);}
+    20%{transform:translateY(-5px) rotateY(16deg) scale(1.3);filter:drop-shadow(0 0 16px rgba(255,78,31,.95));}
+    31%{transform:translateY(0) rotateY(-4deg) scale(.98);filter:drop-shadow(0 0 10px rgba(255,195,0,.75));}
+  }
+  @keyframes hld-energy-line{
+    0%,10%,100%{opacity:0;transform:scaleX(.15);}
+    19%{opacity:1;transform:scaleX(1.08);}
+    34%{opacity:0;transform:scaleX(1.45);}
+  }
+  @keyframes hld-copy-hit{
+    0%,16%,100%{transform:translateX(0);color:var(--muted);}
+    20%{transform:translateX(4px);color:var(--ivory);}
+    25%{transform:translateX(-2px);}
+    34%{transform:translateX(0);color:var(--muted);}
+  }
+  @keyframes hld-word-flash{
+    0%,15%,100%{transform:skewX(0deg);text-shadow:none;}
+    20%{transform:skewX(-10deg) scale(1.13);text-shadow:0 0 16px rgba(255,195,0,.95);}
+    34%{transform:skewX(0deg) scale(1);text-shadow:none;}
+  }
+  /* ---------- Innovista holographic tournament skin ---------- */
+  body{background:radial-gradient(ellipse at 18% 12%,rgba(31,122,255,.16),transparent 35%),radial-gradient(ellipse at 85% 62%,rgba(126,88,255,.12),transparent 38%),var(--black);}
+  h1,h2,h3,.display,.brand-logo,.brand-mark,.map-card .num,.selected-pill,footer .foot-title strong{font-family:'Orbitron',sans-serif;}
+  .arena-3d{background:linear-gradient(180deg,#050b1d 0%,#09152f 48%,#030714 100%);}
+  .arena-3d::before{background-image:linear-gradient(rgba(48,217,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(48,217,255,.16) 1px,transparent 1px);border-top-color:rgba(48,217,255,.5);}
+  .arena-3d::after{border-color:rgba(48,217,255,.14);}
+  .target-reticle{opacity:.5;filter:drop-shadow(0 0 14px rgba(48,217,255,.44));}
+  .target-reticle::before{border-color:rgba(117,140,255,.7);}
+  .target-reticle::after{border-color:rgba(48,217,255,.78);}
+  .topstrip{background:rgba(5,11,29,.86);border-bottom-color:var(--line);}
+  .brand-mark{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;background:conic-gradient(from 200deg,var(--yellow),var(--yellow-deep),#334dff,var(--yellow));border-radius:50%;clip-path:none;box-shadow:0 0 22px rgba(48,217,255,.48);animation:innovista-orbit 9s linear infinite;}
+  .brand-logo{font-family:'Orbitron',sans-serif;font-size:clamp(21px,2.2vw,31px);font-weight:900;}
+  .brand-sub{color:var(--yellow);}
+  .header-intro h1{font-size:clamp(25px,2.6vw,40px);text-shadow:0 0 22px rgba(48,217,255,.38);}
+  .game-badge img{filter:drop-shadow(0 0 14px rgba(48,217,255,.42));}
+  .map-card{background:linear-gradient(145deg,rgba(15,38,76,.96),rgba(7,19,43,.96));}
+  .map-card .thumb{background:linear-gradient(135deg,rgba(48,217,255,.14),rgba(117,140,255,.03)),repeating-linear-gradient(45deg,#10264a 0 10px,#0a1731 10px 20px);}
+  .map-card:not(.used):hover{border-color:var(--yellow);box-shadow:0 22px 30px -22px #000,0 0 30px -17px rgba(48,217,255,.9);}
+  .map-card.scanning{background:#102a52;box-shadow:0 0 0 1px rgba(48,217,255,.34),0 0 30px -7px rgba(48,217,255,.68);}
+  .map-card.selected{background:linear-gradient(160deg,rgba(48,217,255,.18),rgba(117,140,255,.07));}
+  .map-card.selected::before{box-shadow:0 0 0 1px var(--yellow),0 18px 30px -14px rgba(48,217,255,.58);}
+  .control-panel{background:linear-gradient(145deg,rgba(15,40,78,.97),rgba(7,19,43,.97));box-shadow:18px 20px 40px -34px #000,0 0 32px -28px rgba(48,217,255,.85);}
+  .control-panel::before{background:linear-gradient(90deg,var(--fire),var(--yellow),var(--yellow-deep),transparent);}
+  .selected-pill.active{background:#153b70;}
+  .btn:hover{background:#c2f7ff;box-shadow:0 10px 20px -13px rgba(48,217,255,.9);}
+  .btn.is-spinning{animation:innovista-charge .55s ease-in-out infinite alternate;}
+  .btn.ghost:hover{border-color:var(--yellow);color:var(--yellow);}
+  .map-modal-content{background:#050b1d;box-shadow:inset 0 0 0 1px rgba(48,217,255,.6),inset 0 0 90px rgba(48,145,255,.12);}
+  .map-modal-content .modal-thumb::after{background:linear-gradient(180deg,rgba(4,15,42,.2) 20%,transparent 50%,rgba(3,7,20,.9) 100%);}
+  .footer-brand::before{background:linear-gradient(90deg,transparent,var(--fire),var(--yellow),var(--yellow-deep),transparent);box-shadow:0 0 18px var(--yellow);}
+  footer{background:rgba(3,9,25,.82);}
+  .holo-orbit{position:fixed;left:50%;top:50%;width:min(82vw,980px);aspect-ratio:2.2;transform:translate(-50%,-50%) rotateX(68deg);border:1px solid rgba(48,217,255,.28);border-radius:50%;box-shadow:0 0 22px rgba(48,217,255,.14),inset 0 0 20px rgba(117,140,255,.12);pointer-events:none;z-index:0;animation:holo-orbit-spin 20s linear infinite;}
+  .holo-orbit::before,.holo-orbit::after{content:"";position:absolute;border-radius:50%;inset:14%;border:1px solid rgba(117,140,255,.4);box-shadow:0 0 18px rgba(117,140,255,.2);}
+  .holo-orbit::after{inset:31%;border-color:rgba(255,116,72,.42);animation:holo-pulse 2.3s ease-in-out infinite alternate;}
+  .holo-shard{position:fixed;z-index:0;pointer-events:none;width:36px;height:36px;border:1px solid rgba(48,217,255,.72);background:rgba(48,217,255,.07);box-shadow:0 0 18px rgba(48,217,255,.34),inset 0 0 12px rgba(117,140,255,.26);transform-style:preserve-3d;}
+  #innovista3d{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.82;}
+  #innovista3d canvas{display:block;width:100%;height:100%;}
+  .holo-shard-a{left:9vw;top:31vh;animation:shard-a 9s ease-in-out infinite;}
+  .holo-shard-b{right:11vw;top:66vh;width:24px;height:24px;border-color:rgba(117,140,255,.8);animation:shard-b 11s ease-in-out infinite;}
+  .holo-shard-c{right:25vw;top:17vh;width:18px;height:18px;border-color:rgba(255,116,72,.76);animation:shard-c 7.5s ease-in-out infinite;}
+  @keyframes innovista-orbit{to{transform:rotate(360deg)}}
+  @keyframes innovista-charge{to{box-shadow:0 0 28px -2px rgba(48,217,255,.88);filter:brightness(1.14);}}
+  @keyframes holo-orbit-spin{to{transform:translate(-50%,-50%) rotateX(68deg) rotateZ(360deg)}}
+  @keyframes holo-pulse{to{transform:scale(1.22);opacity:.25;}}
+  @keyframes shard-a{0%,100%{transform:translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0)}50%{transform:translate3d(34px,-42px,80px) rotateX(210deg) rotateY(330deg) rotateZ(120deg)}}
+  @keyframes shard-b{0%,100%{transform:translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0)}50%{transform:translate3d(-42px,30px,90px) rotateX(290deg) rotateY(-240deg) rotateZ(-110deg)}}
+  @keyframes shard-c{0%,100%{transform:translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0)}50%{transform:translate3d(26px,46px,70px) rotateX(180deg) rotateY(230deg) rotateZ(200deg)}}
+  @media (max-width:700px){.holo-orbit{width:130vw}.holo-shard-b,.holo-shard-c{display:none;}}
 </style>
 </head>
 <body>
 
 <div class="arena-3d"></div>
+<div id="innovista3d" aria-hidden="true"></div>
+<div class="holo-orbit"></div>
+<div class="holo-shard holo-shard-a"></div>
+<div class="holo-shard holo-shard-b"></div>
+<div class="holo-shard holo-shard-c"></div>
 <div class="target-reticle"></div>
 <div class="scanline"></div>
 
   <div class="topstrip">
     <div class="wrap">
       <div class="brandrow">
-        <div class="brand-mark" aria-hidden="true">EX</div>
+        <div class="brand-mark" aria-hidden="true">IT</div>
         <div class="brand-copy">
-          <div class="brand-logo">Engineer<b>X</b> <b>4.0</b></div>
-          <div class="brand-sub">Free Fire Tournament Series</div>
-        </div>
-        <div class="creator-badge">
-          <img src="assets/tech-geeks-logo.png" alt="Tech Geeks">
+          <div class="brand-logo">INNOVISTA <b>TECHFEST</b></div>
+          <div class="brand-sub">2026 - Free Fire Tournament</div>
         </div>
       </div>
       <div class="header-intro">
         <h1>Map Randomizer</h1>
-        <p>Five maps in the pool. Each map appears <strong>only once</strong> until you reset.</p>
+        <p>Innovista Techfest 2026 - each map appears <strong>only once</strong> until you reset.</p>
         <div class="pool-meta" aria-label="Tournament map pool details">
           <span>Map Pool: 05</span>
           <span>Mode: Battle Royale</span>
@@ -431,7 +511,9 @@
       <div class="game-badge">
         <img src="assets/free-fire-logo.png" alt="Free Fire">
       </div>
-      <div class="tag-live">Drop Zone Selector</div>
+      <div class="partner-slot">
+        <img src="assets/tech-geeks-logo.png" alt="Tech Geeks">
+      </div>
     </div>
   </div>
 
@@ -479,6 +561,90 @@
   </footer>
 
 <script>
+  function initInnovista3D(){
+    const host = document.getElementById('innovista3d');
+    if(!host || !window.THREE) return;
+
+    const mobile = window.innerWidth < 720;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, .1, 120);
+    camera.position.set(0, 0, 28);
+    const renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1 : 1.5));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    host.appendChild(renderer.domElement);
+
+    const portal = new THREE.Group();
+    [
+      { radius:9.2, tube:.035, color:0x30d9ff, opacity:.28, tilt:.18 },
+      { radius:7.8, tube:.06, color:0x758cff, opacity:.22, tilt:-.26 },
+      { radius:6.4, tube:.028, color:0xff7448, opacity:.2, tilt:.38 }
+    ].forEach((spec, index) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(spec.radius, spec.tube, 8, 100),
+        new THREE.MeshBasicMaterial({ color:spec.color, transparent:true, opacity:spec.opacity, blending:THREE.AdditiveBlending, depthWrite:false })
+      );
+      ring.rotation.set(spec.tilt, index * .32, index * .18);
+      ring.userData.spin = (index % 2 ? -.003 : .0022);
+      portal.add(ring);
+    });
+    portal.position.set(0, .6, -18);
+    portal.rotation.x = .48;
+    scene.add(portal);
+
+    const shapes = [];
+    const geometries = [new THREE.IcosahedronGeometry(.75, 0), new THREE.OctahedronGeometry(.85, 0), new THREE.TorusGeometry(.7, .13, 5, 9)];
+    for(let i = 0; i < (mobile ? 6 : 12); i++){
+      const mesh = new THREE.Mesh(
+        geometries[i % geometries.length],
+        new THREE.MeshBasicMaterial({ color:[0x30d9ff,0x758cff,0xff7448][i % 3], wireframe:true, transparent:true, opacity:.3, blending:THREE.AdditiveBlending, depthWrite:false })
+      );
+      mesh.position.set((Math.random()-.5)*38, (Math.random()-.5)*22, -4 - Math.random()*24);
+      mesh.userData = { x:mesh.position.x, y:mesh.position.y, phase:Math.random()*Math.PI*2, speed:.3 + Math.random()*.5 };
+      scene.add(mesh); shapes.push(mesh);
+    }
+
+    const particles = new Float32Array((mobile ? 100 : 220) * 3);
+    for(let i = 0; i < particles.length; i += 3){
+      particles[i] = (Math.random()-.5)*54;
+      particles[i+1] = (Math.random()-.5)*32;
+      particles[i+2] = -Math.random()*35;
+    }
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particles, 3));
+    const particleField = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color:0x8beaff, size:.14, transparent:true, opacity:.64, blending:THREE.AdditiveBlending, depthWrite:false }));
+    scene.add(particleField);
+
+    let mouseX = 0, mouseY = 0, time = 0;
+    document.addEventListener('pointermove', event => {
+      mouseX = (event.clientX / window.innerWidth - .5) * 2;
+      mouseY = (event.clientY / window.innerHeight - .5) * 2;
+    }, { passive:true });
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function animate(){
+      if(!reduceMotion) requestAnimationFrame(animate);
+      time += .01;
+      portal.rotation.z += .001;
+      portal.children.forEach(ring => ring.rotation.z += ring.userData.spin);
+      shapes.forEach(shape => {
+        shape.rotation.x += .008; shape.rotation.y -= .01;
+        shape.position.y = shape.userData.y + Math.sin(time * shape.userData.speed + shape.userData.phase) * .75;
+      });
+      particleField.rotation.y += .0007;
+      camera.position.x += (mouseX * 1.8 - camera.position.x) * .025;
+      camera.position.y += (-mouseY * 1.2 - camera.position.y) * .025;
+      camera.lookAt(0, 0, -8);
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+  initInnovista3D();
+
   const maps = [
     { name: "Bermuda",   img: "MAPS/BERMUDA.png" },
     { name: "Purgatory", img: "MAPS/PURGATORY.png" },
